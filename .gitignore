@@ -1,0 +1,12 @@
+# Dependencias
+__pycache__/
+*.pyc
+.venv/
+
+# Entorno y credenciales (NUNCA subir a git)
+.env
+service_account.json
+token.json
+
+# Archivos temporales
+uploads/
