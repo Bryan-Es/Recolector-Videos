@@ -72,6 +72,9 @@ cuenta y ya puedes grabar. Los videos se guardan en tu Drive dentro de
    - `GOOGLE_REDIRECT_URI` debe apuntar a tu dominio
      (ej. `https://tu-sitio.onrender.com/oauth/callback`).
    - Agrega esa misma URL en la credencial OAuth de la consola (paso 4 arriba).
+   - **En producción define `COOKIE_SECURE=1`** (el sitio va por HTTPS) y
+     `GOOGLE_REFRESH_TOKEN` (el refresh token que se genera al conectar una vez;
+     en contenedores efímeros el `token.json` en disco no persiste).
    - Comando de inicio: `uvicorn app:app --host 0.0.0.0 --port $PORT`.
 3. Abre tu sitio, conéctate con Google una vez (tú) y listo: los demás solo
    graban, los videos caen en tu Drive.
@@ -106,6 +109,25 @@ Mi Drive/
 | GET    | `/oauth/callback`   | Recibe el código y guarda el token             |
 | GET    | `/api/auth/estado`  | ¿Está conectado a Google?                      |
 | POST   | `/api/subir`        | Sube el video a Drive (`frase`, `usuario`, `video`) |
+
+## Seguridad
+
+Medidas aplicadas antes de salir a internet:
+
+- Los secretos (`.env`, `token.json`, `service_account.json`) están en
+  `.gitignore` **y** en `.dockerignore`, para que no entren al repositorio ni a
+  la imagen de Docker.
+- El contenedor corre como usuario **sin privilegios** (no root).
+- **CORS cerrado por defecto**: el frontend se sirve del mismo servidor; si lo
+  separas en otro dominio, usa `ALLOWED_ORIGINS`.
+- **Anti-abuso** en `/api/subir`: límite por IP por hora
+  (`MAX_SUBIDAS_POR_HORA`) y subidas simultáneas (`MAX_SUBIDAS_CONCURRENTES`).
+- **Límite de tamaño** del video (`MAX_VIDEO_MB`) para no agotar la memoria.
+- Flujo **OAuth con `state`** (cookie `httpOnly`) contra CSRF de inicio de sesión.
+- El nombre de usuario se limpia y la extensión del archivo se valida antes de
+  guardarlo en Drive; los errores internos se registran en el log pero no se
+  devuelven al navegador.
+- En producción, marca `COOKIE_SECURE=1` (HTTPS).
 
 ## Cómo actualizar las frases
 

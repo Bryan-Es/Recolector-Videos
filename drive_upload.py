@@ -15,9 +15,12 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
+from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
+
+# Patrón de nombres de los videos grabados por la app (fecha + usuario + timestamp_ms)
+_VIDEO_CAPTURADO_RE = re.compile(r"^\d{8}_\d{6}_.*_\d{13}\.webm$")
 
 
 def _limpiar_nombre(texto: str) -> str:
@@ -35,7 +38,6 @@ class DriveCliente:
         self.token_file = Path(token_file)
         self._credenciales: Credentials | None = None
         self._drive = None
-        self._flow: Flow | None = None
 
     # --- Flujo de autorización ---
 
@@ -53,14 +55,14 @@ class DriveCliente:
             redirect_uri=redirect_uri,
         )
 
-    def url_autorizacion(self, redirect_uri: str) -> str:
+    def url_autorizacion(self, redirect_uri: str, state: str | None = None) -> str:
         flow = self._crear_flow(redirect_uri)
-        self._flow = flow
-        return flow.authorization_url(access_type="offline", prompt="consent")[0]
+        return flow.authorization_url(
+            access_type="offline", prompt="consent", state=state
+        )[0]
 
     def procesar_codigo(self, code: str, redirect_uri: str) -> None:
-        flow = self._flow or self._crear_flow(redirect_uri)
-        self._flow = None
+        flow = self._crear_flow(redirect_uri)
         token = flow.fetch_token(code=code)
         creds = Credentials(
             token=token.get("access_token"),
@@ -180,3 +182,60 @@ class DriveCliente:
             .execute()
         )
         return archivo["webViewLink"]
+
+    def video_referencia(
+        self, frase: str, carpeta_raiz_id: str | None = None
+    ) -> tuple[str, str] | None:
+        """Devuelve (file_id, mime_type) de un video de referencia de la frase.
+
+        Prefiere videos .mp4 que no sean grabaciones hechas por la app.
+        Devuelve None si la carpeta no existe o no tiene videos.
+        """
+        if not carpeta_raiz_id:
+            return None
+        frase_id = self._buscar_carpeta(frase, carpeta_raiz_id.strip())
+        if not frase_id:
+            return None
+
+        res = (
+            self._servicio()
+            .files()
+            .list(
+                q=f"'{frase_id}' in parents and mimeType contains 'video/' and trashed=false",
+                fields="files(id, name, mimeType)",
+                orderBy="createdTime",
+            )
+            .execute()
+        )
+        videos = res.get("files", [])
+        if not videos:
+            return None
+
+        preferido = next(
+            (
+                v
+                for v in videos
+                if not _VIDEO_CAPTURADO_RE.match(v["name"])
+                and v["mimeType"] in ("video/mp4", "video/quicktime", "video/x-msvideo")
+            ),
+            None,
+        )
+        if preferido is None:
+            preferido = next(
+                (v for v in videos if not _VIDEO_CAPTURADO_RE.match(v["name"])),
+                videos[0],
+            )
+        return preferido["id"], preferido["mimeType"]
+
+    def stream_video(self, file_id: str):
+        """Generador de chunks (bytes) de un video de Drive."""
+        request = self._servicio().files().get_media(fileId=file_id)
+        buffer = io.BytesIO()
+        descargador = MediaIoBaseDownload(buffer, request, chunksize=256 * 1024)
+        done = False
+        while not done:
+            _, done = descargador.next_chunk()
+            buffer.seek(0)
+            yield buffer.read()
+            buffer.seek(0)
+            buffer.truncate()

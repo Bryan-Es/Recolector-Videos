@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Colector de Videos - Rimay</title>
+<title>Colector de Videos Rimay</title>
 <style>
   :root {
     --bg: #0f172a;
@@ -17,124 +17,223 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: "Segoe UI", system-ui, sans-serif;
-    background: var(--bg);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(1200px 400px at 50% -100px, rgba(56,189,248,.12), transparent 70%),
+      var(--bg);
     color: var(--text);
     min-height: 100vh;
   }
   header {
-    padding: 20px;
+    padding: 26px 20px 18px;
     text-align: center;
-    border-bottom: 1px solid #334155;
-    background: #0b1220;
+    background: linear-gradient(180deg, #0b1220, transparent);
   }
-  header h1 { font-size: 1.4rem; color: var(--accent); }
-  header p { color: var(--muted); font-size: .9rem; margin-top: 4px; }
-  main { max-width: 900px; margin: 0 auto; padding: 20px; }
-
-  section { background: var(--card); border-radius: 12px; padding: 18px; margin-bottom: 18px; }
-  section h2 { font-size: 1.05rem; margin-bottom: 12px; color: var(--accent); }
-
-  .frases { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; max-height: 340px; overflow-y: auto; padding-right: 6px; }
-  .frase {
-    padding: 10px 12px;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    background: #0f172a;
-    color: var(--text);
-    cursor: pointer;
-    text-align: center;
-    font-size: .9rem;
-    transition: all .15s;
+  header .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
   }
-  .frase:hover { border-color: var(--accent); }
-  .frase.seleccionada { background: var(--accent-dark); border-color: var(--accent); color: white; font-weight: 600; }
-
-  .contador {
-    margin-top: 10px;
-    font-size: .85rem;
-    color: var(--muted);
+  header .logo-marca {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.3rem; color: #0b1220;
   }
+  header h1 { font-size: 1.5rem; color: var(--text); }
+  header .subtitulo { color: var(--muted); font-size: .95rem; margin-top: 4px; max-width: 620px; margin-inline: auto; }
 
-  .camara { position: relative; width: 100%; background: #000; border-radius: 12px; overflow: hidden; }
-  .camara video { width: 100%; display: block; max-height: 480px; background: #000; }
-  .grabando-barra { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,.6); padding: 6px 12px; border-radius: 999px; font-size: .85rem; display: none; }
-  .grabando-barra .punto { display: inline-block; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; margin-right: 6px; animation: parpadeo 1s infinite; }
-  @keyframes parpadeo { 50% { opacity: .2; } }
-
-  .usuario input {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #334155;
-    background: #0f172a;
-    color: var(--text);
-    font-size: 1rem;
+  .steps { display: flex; justify-content: center; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+  .step-pill {
+    display: flex; align-items: center; gap: 8px;
+    background: #0b1220; border: 1px solid #334155;
+    border-radius: 999px; padding: 6px 14px 6px 8px;
+    font-size: .8rem; color: var(--muted);
+    transition: all .2s;
   }
-
-  .botones { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-  button {
-    flex: 1;
-    min-width: 130px;
-    padding: 13px 16px;
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all .15s;
+  .step-pill .n {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #334155; color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; font-weight: 700; flex-shrink: 0;
   }
-  button:disabled { opacity: .4; cursor: not-allowed; }
-  .btn-primario { background: var(--accent-dark); color: white; }
-  .btn-primario:hover:not(:disabled) { background: var(--accent); }
-  .btn-secundario { background: #334155; color: var(--text); }
-  .btn-secundario:hover:not(:disabled) { background: #475569; }
-  .btn-grabar { background: var(--danger); color: white; }
-  .btn-grabar:hover:not(:disabled) { background: #ef4444; }
+  .step-pill.active { border-color: var(--accent); color: var(--text); }
+  .step-pill.active .n { background: var(--accent-dark); color: #fff; }
+  .step-pill.done { border-color: var(--ok); color: var(--text); }
+  .step-pill.done .n { background: var(--ok); color: #0f172a; }
+  .step-pill.done .n::after { content: '✓'; }
 
-  .estado { margin-top: 12px; font-size: .95rem; min-height: 1.2em; }
-  .estado.ok { color: var(--ok); }
-  .estado.error { color: var(--danger); }
-
-  .progreso { margin-top: 10px; background: #0f172a; border-radius: 999px; height: 10px; overflow: hidden; display: none; }
-  .progreso .barra { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-dark)); transition: width .2s; }
-
-  .oculto { display: none !important; }
-  .muted { color: var(--muted); font-size: .85rem; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px; }
 
   .auth-banner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    background: var(--card);
-    border: 1px solid #334155;
-    border-radius: 12px;
-    padding: 14px 18px;
-    margin: 20px auto;
-    max-width: 900px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+    background: var(--card); border: 1px solid #334155;
+    border-radius: 12px; padding: 14px 18px; margin: 0 20px 20px;
+    max-width: 940px; margin-inline: auto;
   }
-  .auth-banner.conectado { border-color: var(--ok); }
-  .auth-banner.no-conectado { border-color: var(--danger); }
+  .auth-banner.conectado { border-color: var(--ok); background: rgba(74,222,128,.06); }
+  .auth-banner.no-conectado { border-color: var(--danger); background: rgba(248,113,113,.06); }
   .auth-banner .info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 220px; }
   .auth-banner .punto { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-  .auth-banner.conectado .punto { background: var(--ok); }
-  .auth-banner.no-conectado .punto { background: var(--danger); }
+  .auth-banner.conectado .punto { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+  .auth-banner.no-conectado .punto { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
   .btn-google {
     background: #fff; color: #333;
     display: inline-flex; align-items: center; gap: 8px;
     padding: 10px 16px; border-radius: 8px;
-    font-size: .9rem; font-weight: 600;
-    flex: 0 0 auto;
+    font-size: .9rem; font-weight: 600; flex: 0 0 auto;
   }
   .btn-google:hover { background: #f1f3f4; }
+
+  section.card {
+    background: var(--card);
+    border: 1px solid #1e293b;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 18px;
+  }
+  section.card h2 { font-size: 1.05rem; margin-bottom: 14px; display: flex; align-items: center; }
+  .badge {
+    width: 28px; height: 28px; border-radius: 9px; margin-right: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #0b1220; font-weight: 800; font-size: .9rem;
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  .intro { line-height: 1.6; }
+  .intro p { color: var(--text); margin-bottom: 14px; }
+  .intro .filas { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .intro .fila { background: #0b1220; border: 1px solid #334155; border-radius: 12px; padding: 14px; }
+  .intro .fila b { display: block; color: var(--accent); font-size: .9rem; margin-bottom: 4px; }
+  .intro .fila span { color: var(--muted); font-size: .88rem; }
+  .intro .aviso {
+    border-left: 3px solid var(--accent);
+    background: #0b1220; padding: 12px 16px; border-radius: 10px;
+    font-size: .9rem; color: var(--muted);
+  }
+
+  select#select-frase {
+    width: 100%; padding: 13px 14px; border-radius: 10px;
+    border: 1px solid #334155; background: #0f172a;
+    color: var(--text); font-size: 1rem; cursor: pointer;
+  }
+  select#select-frase:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56,189,248,.15); }
+  .contador { margin-top: 8px; font-size: .82rem; color: var(--muted); }
+
+  .usuario input {
+    width: 100%; padding: 13px 14px; border-radius: 10px;
+    border: 1px solid #334155; background: #0f172a;
+    color: var(--text); font-size: 1rem;
+  }
+  .usuario input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56,189,248,.15); }
+  .usuario input::placeholder { color: var(--muted); }
+
+  .rec-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .rec-grid { grid-template-columns: 1fr; } }
+
+  .cam-box { position: relative; background: #000; border-radius: 14px; overflow: hidden; aspect-ratio: 4 / 3; }
+  .cam-box video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cam-box .marco { position: absolute; inset: 0; pointer-events: none; border: 2px dashed rgba(148,163,184,.35); border-radius: 14px; transition: border-color .2s; }
+  .cam-box.grabando .marco { border-color: var(--danger); border-style: solid; }
+
+  .chip-rec {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    z-index: 2; display: none; align-items: center; gap: 8px;
+    background: rgba(0,0,0,.75); color: #fff; padding: 6px 14px;
+    border-radius: 999px; font-size: .85rem; font-weight: 600;
+  }
+  .chip-rec .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); animation: parpadeo 1s infinite; }
+  .chip-rec .tiempo { font-variant-numeric: tabular-nums; }
+  @keyframes parpadeo { 50% { opacity: .2; } }
+
+  .overlay {
+    position: absolute; inset: 0; z-index: 3;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(2,6,23,.6);
+  }
+  .overlay .numero { font-size: 6rem; font-weight: 800; color: #fff; text-shadow: 0 0 40px rgba(56,189,248,.7); }
+  .overlay .mensaje { color: #fff; font-size: 1.1rem; text-align: center; padding: 20px; }
+
+  .hint { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; color: #cbd5e1; font-size: .82rem; z-index: 1; pointer-events: none; text-shadow: 0 1px 4px #000; }
+
+  .video-ref { width: 100%; }
+  .video-ref video { width: 100%; border-radius: 12px; background: #000; aspect-ratio: 4 / 3; object-fit: cover; }
+  .video-ref .etiqueta { font-size: .82rem; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .video-ref p { font-size: .82rem; color: var(--muted); margin-top: 6px; }
+
+  .consent {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-top: 16px; padding: 12px 14px;
+    background: #0b1220; border: 1px solid #334155; border-radius: 12px;
+    font-size: .9rem; line-height: 1.45; cursor: pointer;
+  }
+  .consent input { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; accent-color: var(--accent-dark); cursor: pointer; }
+  .consent:hover { border-color: var(--accent); }
+
+  .botones { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  button { border: none; border-radius: 10px; font-size: .95rem; font-weight: 600; cursor: pointer; transition: all .15s; font-family: inherit; }
+  button:disabled { opacity: .35; cursor: not-allowed; }
+  .btn { flex: 1; min-width: 130px; padding: 13px 16px; }
+  .btn-primary { background: linear-gradient(135deg, var(--accent-dark), var(--accent)); color: #fff; }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.15); }
+  .btn-outline { background: transparent; border: 1px solid #334155; color: var(--text); }
+  .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover:not(:disabled) { background: #ef4444; }
+
+  .btn-record, .btn-stop {
+    width: 68px; height: 68px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  }
+  .btn-record { background: var(--danger); }
+  .btn-record:hover:not(:disabled) { background: #ef4444; transform: scale(1.06); }
+  .btn-record .icon { width: 24px; height: 24px; border-radius: 50%; background: #fff; }
+  .btn-record.activo .icon { border-radius: 6px; width: 20px; height: 20px; }
+  .btn-stop { background: #f8fafc; }
+  .btn-stop:hover:not(:disabled) { background: #fff; transform: scale(1.06); }
+  .btn-stop .icon { width: 22px; height: 22px; border-radius: 5px; background: #0f172a; }
+
+  .estado { margin-top: 12px; font-size: .92rem; min-height: 1.2em; color: var(--muted); }
+  .estado.ok { color: var(--ok); }
+  .estado.error { color: var(--danger); }
+
+  .progreso { margin-top: 12px; background: #0f172a; border-radius: 999px; height: 10px; overflow: hidden; display: none; }
+  .progreso .barra { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-dark)); transition: width .2s; }
+
+  .exito { margin-top: 16px; padding: 18px; border-radius: 12px; background: rgba(74,222,128,.08); border: 1px solid var(--ok); display: none; text-align: center; }
+  .exito b { display: block; font-size: 1.05rem; color: var(--ok); margin-bottom: 4px; }
+  .exito span { color: var(--muted); font-size: .9rem; }
+  .exito button { margin-top: 12px; }
+
+  footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 20px; border-top: 1px solid #1e293b; margin-top: 10px; }
+
+  .oculto { display: none !important; }
+  .muted { color: var(--muted); font-size: .85rem; }
+
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 50; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .toast { background: #0b1220; border: 1px solid #334155; color: var(--text); padding: 12px 18px; border-radius: 10px; font-size: .9rem; box-shadow: 0 8px 24px rgba(0,0,0,.45); max-width: 92vw; animation: subir .2s ease; }
+  .toast.ok { border-color: var(--ok); }
+  .toast.error { border-color: var(--danger); }
+  .toast.info { border-color: var(--accent); }
+  @keyframes subir { from { opacity: 0; transform: translateY(8px); } }
 </style>
 </head>
 <body>
 <header>
-  <h1>Colector de Videos Rimay</h1>
-  <p>Elige una frase, graba tu video y se subirá automáticamente a Google Drive</p>
+  <div class="logo">
+    <div class="logo-marca">R</div>
+    <h1>Colector de Videos Rimay</h1>
+  </div>
+  <p class="subtitulo">Ayúdanos a entrenar el reconocimiento de Lengua de Señas Ecuatoriana (LSEC). Elige una frase, mira la seña y grábate. Toma menos de un minuto.</p>
+  <div class="steps" id="steps">
+    <div class="step-pill active" id="paso-1"><span class="n">1</span> Elegir frase</div>
+    <div class="step-pill" id="paso-2"><span class="n">2</span> Tu nombre</div>
+    <div class="step-pill" id="paso-3"><span class="n">3</span> Grabar y subir</div>
+  </div>
 </header>
 
 <div class="auth-banner no-conectado" id="auth-banner">
@@ -149,44 +248,83 @@
 </div>
 
 <main>
-  <section>
-    <h2>1. Elige la frase a grabar</h2>
-    <div class="frases" id="frases"></div>
+  <section class="card intro">
+    <h2>¿Para qué es este proyecto?</h2>
+    <div class="filas">
+      <div class="fila"><b>¿Qué hacemos con tu video?</b><span>Solo lo usamos para entrenar y mejorar el reconocimiento de señas del proyecto Rimay-IA.</span></div>
+      <div class="fila"><b>¿Dónde se guarda?</b><span>En el Drive del equipo. No se publica ni se comparte fuera del proyecto.</span></div>
+      <div class="fila"><b>¿Cómo colaboro?</b><span>Elige una frase, mira la seña de referencia y grábate haciéndola de frente a la cámara.</span></div>
+    </div>
+    <div class="aviso"><strong>Consentimiento:</strong> al grabar y subir, aceptas que tu video se almacene y se use para el entrenamiento del reconocimiento de señas de Rimay-IA. Puedes dejar de participar en cualquier momento.</div>
+  </section>
+
+  <section class="card">
+    <h2><span class="badge">1</span> Elige la frase a grabar</h2>
+    <select id="select-frase">
+      <option value="">— Elige una frase —</option>
+    </select>
     <div class="contador" id="contador"></div>
   </section>
 
-  <section>
-    <h2>2. Tu nombre</h2>
+  <section class="card">
+    <h2><span class="badge">2</span> Tu nombre</h2>
     <div class="usuario">
       <input type="text" id="usuario" placeholder="Escribe tu nombre (para identificar el video)" autocomplete="name">
     </div>
+    <p class="muted" style="margin-top:6px;">Úsalo solo para identificar el video dentro del equipo; no se mostrará públicamente.</p>
   </section>
 
-  <section>
-    <h2>3. Grábate haciendo la seña</h2>
-    <div class="camara">
-      <video id="video" autoplay muted playsinline></video>
-      <div class="grabando-barra" id="grabando"><span class="punto"></span>GRABANDO</div>
+  <section class="card">
+    <h2><span class="badge">3</span> Grábate haciendo la seña</h2>
+    <div class="rec-grid">
+      <div>
+        <div class="cam-box" id="cam-box">
+          <video id="video" autoplay muted playsinline></video>
+          <div class="marco"></div>
+          <div class="chip-rec" id="grabando"><span class="dot"></span><span>GRABANDO</span><span class="tiempo" id="tiempo">00:00</span></div>
+          <div class="overlay" id="overlay"></div>
+          <div class="hint">Colócate de frente, iluminado y con el torso visible</div>
+        </div>
+        <label class="consent">
+          <input type="checkbox" id="consentimiento">
+          <span>Entiendo que mi video se usará para entrenar el reconocimiento de señas del proyecto Rimay-IA y acepto que se almacene en el Drive del equipo.</span>
+        </label>
+        <div class="botones">
+          <button class="btn btn-outline" id="btn-iniciar">Activar cámara</button>
+          <button class="btn-record" id="btn-grabar" aria-label="Grabar" disabled><span class="icon"></span></button>
+          <button class="btn-stop oculto" id="btn-detener" aria-label="Detener" disabled><span class="icon"></span></button>
+          <button class="btn btn-outline" id="btn-limpiar" disabled>Descartar</button>
+          <button class="btn btn-primary" id="btn-subir" disabled>Subir a Drive</button>
+        </div>
+        <div class="estado" id="estado"></div>
+        <div class="progreso" id="progreso"><div class="barra" id="barra"></div></div>
+        <div class="exito" id="exito">
+          <b>¡Video subido! Gracias por tu colaboración</b>
+          <span id="exito-texto"></span>
+          <button class="btn btn-primary" id="btn-otro">Grabar otro video</button>
+        </div>
+      </div>
+      <div class="video-ref">
+        <div class="etiqueta"><span>▶</span> Seña de referencia</div>
+        <video id="video-referencia" controls preload="metadata"></video>
+        <p>Obsérvala y luego grábate haciendo la misma seña.</p>
+      </div>
     </div>
-
-    <div class="botones">
-      <button class="btn-primario" id="btn-iniciar">Iniciar cámara</button>
-      <button class="btn-grabar" id="btn-grabar" disabled>Grabar</button>
-      <button class="btn-secundario" id="btn-detener" disabled>Detener</button>
-      <button class="btn-secundario" id="btn-limpiar" disabled>Descartar</button>
-      <button class="btn-primario" id="btn-subir" disabled>Subir a Drive</button>
-    </div>
-
-    <div class="estado" id="estado"></div>
-    <div class="progreso" id="progreso"><div class="barra" id="barra"></div></div>
-    <p class="muted">Consejo: ubícate de frente a la cámara, iluminado y con buena conexión a internet.</p>
   </section>
 </main>
 
+<footer>Proyecto Rimay-IA · Recolección de datos para reconocimiento de Lengua de Señas Ecuatoriana</footer>
+
+<div id="toast"></div>
+
 <script>
-const frasesEl = document.getElementById('frases');
+const selectEl = document.getElementById('select-frase');
 const contadorEl = document.getElementById('contador');
+const camBox = document.getElementById('cam-box');
 const video = document.getElementById('video');
+const videoRef = document.getElementById('video-referencia');
+const videoRefMsg = document.querySelector('.video-ref p');
+const consentimiento = document.getElementById('consentimiento');
 const estadoEl = document.getElementById('estado');
 const progresoEl = document.getElementById('progreso');
 const barraEl = document.getElementById('barra');
@@ -195,7 +333,19 @@ const btnGrabar = document.getElementById('btn-grabar');
 const btnDetener = document.getElementById('btn-detener');
 const btnLimpiar = document.getElementById('btn-limpiar');
 const btnSubir = document.getElementById('btn-subir');
+const btnOtro = document.getElementById('btn-otro');
 const grabandoEl = document.getElementById('grabando');
+const tiempoEl = document.getElementById('tiempo');
+const overlayEl = document.getElementById('overlay');
+const exitoEl = document.getElementById('exito');
+const exitoTexto = document.getElementById('exito-texto');
+const toastEl = document.getElementById('toast');
+const paso1 = document.getElementById('paso-1');
+const paso2 = document.getElementById('paso-2');
+const paso3 = document.getElementById('paso-3');
+
+const authBanner = document.getElementById('auth-banner');
+const authTexto = document.getElementById('auth-texto');
 
 let frases = [];
 let fraseSeleccionada = null;
@@ -203,13 +353,43 @@ let stream = null;
 let mediaRecorder = null;
 let chunks = [];
 let videoFinal = null;
-
-const authBanner = document.getElementById('auth-banner');
-const authTexto = document.getElementById('auth-texto');
+let videoSubido = false;
+let countdownTimer = null;
+let tiempoTimer = null;
+let segundos = 0;
 
 function mostrarEstado(texto, tipo = '') {
   estadoEl.textContent = texto;
   estadoEl.className = 'estado' + (tipo ? ' ' + tipo : '');
+}
+
+function toast(texto, tipo = 'info') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + tipo;
+  el.textContent = texto;
+  toastEl.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function formatTiempo(s) {
+  const m = String(Math.floor(s / 60)).padStart(2, '0');
+  const ss = String(s % 60).padStart(2, '0');
+  return m + ':' + ss;
+}
+
+function actualizarPasos() {
+  const fraseOk = !!fraseSeleccionada;
+  const nombreOk = document.getElementById('usuario').value.trim() !== '';
+  paso1.classList.toggle('active', !fraseOk);
+  paso1.classList.toggle('done', fraseOk);
+  paso2.classList.toggle('active', fraseOk && !nombreOk);
+  paso2.classList.toggle('done', nombreOk);
+  paso3.classList.toggle('active', !videoSubido && nombreOk);
+  paso3.classList.toggle('done', videoSubido);
+}
+
+function actualizarBotonGrabar() {
+  btnGrabar.disabled = !(stream && consentimiento.checked && fraseSeleccionada);
 }
 
 async function verificarAuth() {
@@ -231,10 +411,10 @@ async function verificarAuth() {
   }
   const params = new URLSearchParams(window.location.search);
   if (params.get('auth') === 'ok') {
-    mostrarEstado('Conectado a Google correctamente.', 'ok');
+    toast('Conectado a Google correctamente.', 'ok');
   }
   if (params.get('auth_error')) {
-    mostrarEstado('La conexión con Google fue cancelada o falló.', 'error');
+    toast('La conexión con Google fue cancelada o falló.', 'error');
   }
   window.history.replaceState({}, '', window.location.pathname);
 }
@@ -249,69 +429,145 @@ async function cargarFrases() {
       "Adiós", "Sí", "No (Negación)", "Hola", "Ayudar, Ayuda"
     ];
   }
-  frasesEl.innerHTML = '';
+  selectEl.innerHTML = '<option value="">— Elige una frase —</option>';
   frases.forEach(f => {
-    const b = document.createElement('button');
-    b.className = 'frase';
-    b.textContent = f;
-    b.addEventListener('click', () => {
-      document.querySelectorAll('.frase').forEach(x => x.classList.remove('seleccionada'));
-      b.classList.add('seleccionada');
-      fraseSeleccionada = f;
-      mostrarEstado('');
-    });
-    frasesEl.appendChild(b);
+    const opt = document.createElement('option');
+    opt.value = f;
+    opt.textContent = f;
+    selectEl.appendChild(opt);
   });
-  contadorEl.textContent = `${frases.length} frases disponibles`;
+  contadorEl.textContent = frases.length + ' frases disponibles';
 }
+
+function cargarVideoReferencia(frase) {
+  videoRef.pause();
+  videoRef.removeAttribute('src');
+  videoRef.load();
+  videoRef.src = '/api/videos/' + encodeURIComponent(frase);
+  videoRefMsg.textContent = 'Cargando seña de referencia...';
+  videoRef.onerror = () => {
+    videoRef.pause();
+    videoRef.removeAttribute('src');
+    videoRefMsg.textContent = 'No hay video de referencia disponible para esta frase.';
+  };
+  videoRef.onloadeddata = () => {
+    videoRefMsg.textContent = 'Obsérvala y luego grábate haciendo la misma seña.';
+  };
+}
+
+selectEl.addEventListener('change', () => {
+  fraseSeleccionada = selectEl.value || null;
+  if (fraseSeleccionada) {
+    cargarVideoReferencia(fraseSeleccionada);
+    mostrarEstado('');
+  }
+  actualizarBotonGrabar();
+  actualizarPasos();
+});
+
+document.getElementById('usuario').addEventListener('input', actualizarPasos);
+consentimiento.addEventListener('change', actualizarBotonGrabar);
 
 async function iniciarCamara() {
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: true });
     video.srcObject = stream;
-    btnIniciar.disabled = true;
-    btnGrabar.disabled = false;
-    mostrarEstado('Cámara lista. Presiona Grabar.', 'ok');
+    btnIniciar.classList.add('oculto');
+    actualizarBotonGrabar();
+    mostrarEstado('Cámara lista. Presiona el botón rojo para grabar.', 'ok');
   } catch (e) {
     mostrarEstado('No se pudo acceder a la cámara: ' + e.message, 'error');
+    toast('No se pudo acceder a la cámara', 'error');
   }
 }
 
-function iniciarGrabacion() {
+function mostrarOverlay(html) {
+  overlayEl.innerHTML = html;
+  overlayEl.style.display = 'flex';
+}
+
+function ocultarOverlay() {
+  overlayEl.style.display = 'none';
+  overlayEl.innerHTML = '';
+}
+
+function iniciarCuentaAtras() {
   if (!fraseSeleccionada) {
     mostrarEstado('Primero elige una frase en el paso 1.', 'error');
     return;
   }
+  if (!consentimiento.checked) {
+    mostrarEstado('Debes marcar la casilla de consentimiento antes de grabar.', 'error');
+    return;
+  }
+  if (mediaRecorder && mediaRecorder.state === 'recording') return;
+  btnGrabar.disabled = true;
+  let n = 3;
+  mostrarOverlay('<div class="numero">' + n + '</div>');
+  countdownTimer = setInterval(() => {
+    n--;
+    if (n > 0) {
+      overlayEl.querySelector('.numero').textContent = n;
+    } else {
+      clearInterval(countdownTimer);
+      ocultarOverlay();
+      iniciarGrabacion();
+    }
+  }, 1000);
+}
+
+function iniciarGrabacion() {
   chunks = [];
-  mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+  const tipos = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
+  const tipo = tipos.find(t => MediaRecorder.isTypeSupported(t)) || '';
+  mediaRecorder = new MediaRecorder(stream, tipo ? { mimeType: tipo } : undefined);
   mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
   mediaRecorder.onstop = () => {
-    videoFinal = new Blob(chunks, { type: 'video/webm' });
+    pararTemporizador();
+    videoFinal = new Blob(chunks, { type: tipo || 'video/webm' });
     video.srcObject = null;
     video.src = URL.createObjectURL(videoFinal);
     video.controls = true;
     video.muted = false;
+    camBox.classList.remove('grabando');
     btnSubir.disabled = false;
     btnLimpiar.disabled = false;
-    grabandoEl.style.display = 'none';
-    mostrarEstado(`Video listo (${(videoFinal.size / (1024*1024)).toFixed(2)} MB). Presiona Subir a Drive.`, 'ok');
+    btnGrabar.disabled = true;
+    mostrarEstado('Video listo (' + (videoFinal.size / (1024 * 1024)).toFixed(2) + ' MB). Presiona Subir a Drive.', 'ok');
   };
   mediaRecorder.start();
-  btnGrabar.disabled = true;
+  segundos = 0;
+  tiempoEl.textContent = '00:00';
+  grabandoEl.style.display = 'flex';
+  btnGrabar.classList.add('activo');
+  btnGrabar.classList.add('oculto');
+  btnDetener.classList.remove('oculto');
   btnDetener.disabled = false;
-  grabandoEl.style.display = 'block';
-  mostrarEstado('Grabando... presiona Detener cuando termines.');
+  camBox.classList.add('grabando');
+  mostrarEstado('Grabando... presiona el botón de detener cuando termines.');
+  tiempoTimer = setInterval(() => {
+    segundos++;
+    tiempoEl.textContent = formatTiempo(segundos);
+  }, 1000);
+}
+
+function pararTemporizador() {
+  if (tiempoTimer) { clearInterval(tiempoTimer); tiempoTimer = null; }
 }
 
 function detenerGrabacion() {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop();
   }
+  btnDetener.classList.add('oculto');
   btnDetener.disabled = true;
-  btnGrabar.disabled = false;
+  btnGrabar.classList.remove('activo');
+  btnGrabar.classList.remove('oculto');
+  grabandoEl.style.display = 'none';
 }
 
 function limpiar() {
+  pararTemporizador();
   chunks = [];
   videoFinal = null;
   video.srcObject = stream;
@@ -320,8 +576,10 @@ function limpiar() {
   video.muted = true;
   btnSubir.disabled = true;
   btnLimpiar.disabled = true;
-  btnGrabar.disabled = false;
-  btnDetener.disabled = true;
+  actualizarBotonGrabar();
+  camBox.classList.remove('grabando');
+  grabandoEl.style.display = 'none';
+  ocultarOverlay();
   mostrarEstado('');
 }
 
@@ -329,6 +587,7 @@ async function subirVideo() {
   if (!videoFinal || !fraseSeleccionada) return;
   const usuario = document.getElementById('usuario').value.trim() || 'anonimo';
   btnSubir.disabled = true;
+  btnLimpiar.disabled = true;
   progresoEl.style.display = 'block';
   barraEl.style.width = '0%';
 
@@ -346,25 +605,49 @@ async function subirVideo() {
     barraEl.style.width = '100%';
     const data = await res.json();
     if (res.ok) {
-      mostrarEstado('Video subido correctamente. Gracias por tu colaboración.', 'ok');
+      videoSubido = true;
+      actualizarPasos();
+      exitoTexto.textContent = 'Seña "' + fraseSeleccionada + '" grabada y guardada en el Drive del proyecto.';
+      exitoEl.style.display = 'block';
+      btnOtro.classList.remove('oculto');
+      toast('Video subido correctamente. ¡Gracias!', 'ok');
       limpiar();
     } else {
       mostrarEstado('Error: ' + (data.detail || 'no se pudo subir'), 'error');
+      toast('Error al subir: ' + (data.detail || 'desconocido'), 'error');
       btnSubir.disabled = false;
+      btnLimpiar.disabled = false;
     }
   } catch (e) {
     mostrarEstado('Error de conexión: ' + e.message, 'error');
+    toast('Error de conexión al subir', 'error');
     btnSubir.disabled = false;
+    btnLimpiar.disabled = false;
   } finally {
     setTimeout(() => { progresoEl.style.display = 'none'; }, 1500);
   }
 }
 
+function grabarOtro() {
+  videoSubido = false;
+  exitoEl.style.display = 'none';
+  selectEl.value = '';
+  fraseSeleccionada = null;
+  videoRef.pause();
+  videoRef.removeAttribute('src');
+  videoRefMsg.textContent = 'Obsérvala y luego grábate haciendo la misma seña.';
+  actualizarBotonGrabar();
+  actualizarPasos();
+  mostrarEstado('Puedes grabar otra seña. Elige una frase si deseas cambiarla.');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 btnIniciar.addEventListener('click', iniciarCamara);
-btnGrabar.addEventListener('click', iniciarGrabacion);
+btnGrabar.addEventListener('click', iniciarCuentaAtras);
 btnDetener.addEventListener('click', detenerGrabacion);
 btnLimpiar.addEventListener('click', limpiar);
 btnSubir.addEventListener('click', subirVideo);
+btnOtro.addEventListener('click', grabarOtro);
 
 cargarFrases();
 verificarAuth();

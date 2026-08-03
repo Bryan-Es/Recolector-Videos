@@ -1,0 +1,18 @@
+# Credenciales y secretos (NUNCA en la imagen)
+.env
+.env.local
+service_account.json
+token.json
+
+# Datos locales / temporales
+uploads/
+__pycache__/
+*.pyc
+.venv/
+
+# Git y editor
+.git/
+.gitignore
+Dockerfile
+.dockerignore
+README.md
