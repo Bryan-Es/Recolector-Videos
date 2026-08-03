@@ -156,7 +156,13 @@ def oauth_callback(
     if not esperado or not state or not secrets.compare_digest(esperado, state):
         raise HTTPException(status_code=403, detail="Estado de autorización inválido")
 
-    get_drive().procesar_codigo(code, redirect_uri())
+    email_permitido = os.getenv("GOOGLE_ADMIN_EMAIL", "").strip() or None
+    try:
+        get_drive().procesar_codigo(code, redirect_uri(), email_permitido)
+    except ValueError as exc:
+        logger.warning("Conexión rechazada: %s", exc)
+        return RedirectResponse("/?auth_error=cuenta_no_autorizada")
+
     response = RedirectResponse("/?auth=ok")
     response.delete_cookie("oauth_state")
     return response

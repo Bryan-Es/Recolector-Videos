@@ -61,7 +61,21 @@ class DriveCliente:
             access_type="offline", prompt="consent", state=state
         )[0]
 
-    def procesar_codigo(self, code: str, redirect_uri: str) -> None:
+    def _email_de_cuenta(self, creds: Credentials) -> str:
+        """Email de la cuenta autenticada (vía la API de Drive, sin scopes extra)."""
+        service = build("drive", "v3", credentials=creds, cache_discovery=False)
+        info = service.about().get(fields="user(emailAddress)").execute()
+        return info["user"]["emailAddress"]
+
+    def procesar_codigo(
+        self, code: str, redirect_uri: str, email_permitido: str | None = None
+    ) -> None:
+        """Intercambia el código por un token y lo guarda.
+
+        Si se indica `email_permitido`, rechaza cuentas que no coincidan y no
+        guarda nada (protege contra que otro usuario se conecte y reemplace
+        el token del dueño).
+        """
         flow = self._crear_flow(redirect_uri)
         token = flow.fetch_token(code=code)
         creds = Credentials(
@@ -72,6 +86,12 @@ class DriveCliente:
             client_secret=self.client_secret,
             scopes=SCOPES,
         )
+        if email_permitido:
+            email = self._email_de_cuenta(creds)
+            if email.lower() != email_permitido.lower():
+                raise ValueError(
+                    f"La cuenta {email} no está autorizada (se espera {email_permitido})"
+                )
         self.token_file.parent.mkdir(exist_ok=True, parents=True)
         self.token_file.write_text(creds.to_json(), encoding="utf-8")
         self._credenciales = creds
