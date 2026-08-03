@@ -400,11 +400,12 @@ async function verificarAuth() {
       authBanner.classList.remove('no-conectado');
       authBanner.classList.add('conectado');
       authTexto.textContent = 'Conectado a Google Drive. Listo para subir videos.';
-      document.getElementById('btn-google').textContent = 'Reconectar Google';
+      document.getElementById('btn-google').style.display = 'none';
     } else {
       authBanner.classList.remove('conectado');
       authBanner.classList.add('no-conectado');
       authTexto.textContent = 'No estás conectado a Google Drive. Conéctate para poder subir los videos.';
+      document.getElementById('btn-google').style.display = '';
     }
   } catch {
     authTexto.textContent = 'No se pudo verificar la conexión.';
