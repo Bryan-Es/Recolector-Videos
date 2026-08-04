@@ -8,6 +8,7 @@ carpeta inicia sesión una vez y el servidor guarda el refresh token.
 import io
 import os
 import re
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -38,6 +39,9 @@ class DriveCliente:
         self.token_file = Path(token_file)
         self._credenciales: Credentials | None = None
         self._drive = None
+        # Flows OAuth en curso, guardados por `state` (el code_verifier de PKCE
+        # debe sobrevivir entre /auth/iniciar y el callback).
+        self._flows: dict[str, tuple[float, Flow]] = {}
 
     # --- Flujo de autorización ---
 
@@ -56,10 +60,20 @@ class DriveCliente:
         )
 
     def url_autorizacion(self, redirect_uri: str, state: str | None = None) -> str:
+        self._purgar_flows()
         flow = self._crear_flow(redirect_uri)
-        return flow.authorization_url(
+        url = flow.authorization_url(
             access_type="offline", prompt="consent", state=state
         )[0]
+        if state:
+            self._flows[state] = (time.monotonic(), flow)
+        return url
+
+    def _purgar_flows(self) -> None:
+        ahora = time.monotonic()
+        self._flows = {
+            s: (t, f) for s, (t, f) in self._flows.items() if ahora - t < 900
+        }
 
     def _email_de_cuenta(self, creds: Credentials) -> str:
         """Email de la cuenta autenticada (vía la API de Drive, sin scopes extra)."""
@@ -68,15 +82,22 @@ class DriveCliente:
         return info["user"]["emailAddress"]
 
     def procesar_codigo(
-        self, code: str, redirect_uri: str, email_permitido: str | None = None
+        self,
+        code: str,
+        redirect_uri: str,
+        state: str | None = None,
+        email_permitido: str | None = None,
     ) -> None:
         """Intercambia el código por un token y lo guarda.
 
-        Si se indica `email_permitido`, rechaza cuentas que no coincidan y no
-        guarda nada (protege contra que otro usuario se conecte y reemplace
-        el token del dueño).
+        Usa el Flow guardado en `url_autorizacion` para que el code_verifier
+        de PKCE coincida. Si se indica `email_permitido`, rechaza cuentas que
+        no coincidan y no guarda nada (protege contra que otro usuario se
+        conecte y reemplace el token del dueño).
         """
-        flow = self._crear_flow(redirect_uri)
+        self._purgar_flows()
+        entrada = self._flows.pop(state, None) if state else None
+        flow = entrada[1] if entrada else self._crear_flow(redirect_uri)
         token = flow.fetch_token(code=code)
         creds = Credentials(
             token=token.get("access_token"),

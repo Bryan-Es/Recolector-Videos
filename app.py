@@ -158,7 +158,7 @@ def oauth_callback(
 
     email_permitido = os.getenv("GOOGLE_ADMIN_EMAIL", "").strip() or None
     try:
-        get_drive().procesar_codigo(code, redirect_uri(), email_permitido)
+        get_drive().procesar_codigo(code, redirect_uri(), state, email_permitido)
     except ValueError as exc:
         logger.warning("Conexión rechazada: %s", exc)
         return RedirectResponse("/?auth_error=cuenta_no_autorizada")
