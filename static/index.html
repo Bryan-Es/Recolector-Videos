@@ -141,8 +141,20 @@
 
   .cam-box { position: relative; background: #000; border-radius: 14px; overflow: hidden; aspect-ratio: 4 / 3; }
   .cam-box video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cam-box video.espejo { transform: scaleX(-1); }
   .cam-box .marco { position: absolute; inset: 0; pointer-events: none; border: 2px dashed rgba(148,163,184,.35); border-radius: 14px; transition: border-color .2s; }
   .cam-box.grabando .marco { border-color: var(--danger); border-style: solid; }
+
+  .btn-switch-cam {
+    position: absolute; top: 12px; right: 12px; z-index: 2;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(0,0,0,.55); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(255,255,255,.25);
+  }
+  .btn-switch-cam svg { width: 22px; height: 22px; }
+  .btn-switch-cam:hover:not(:disabled) { background: rgba(0,0,0,.8); }
+  .btn-switch-cam:disabled { opacity: .4; cursor: not-allowed; }
 
   .chip-rec {
     position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
@@ -314,6 +326,9 @@
       <div>
         <div class="cam-box" id="cam-box">
           <video id="video" autoplay muted playsinline></video>
+          <button class="btn-switch-cam oculto" id="btn-cambiar-camara" type="button" aria-label="Cambiar cámara" title="Cambiar cámara" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </button>
           <div class="marco"></div>
           <div class="chip-rec" id="grabando"><span class="dot"></span><span>GRABANDO</span><span class="tiempo" id="tiempo">00:00</span></div>
           <div class="overlay" id="overlay"></div>
@@ -363,6 +378,7 @@ const estadoEl = document.getElementById('estado');
 const progresoEl = document.getElementById('progreso');
 const barraEl = document.getElementById('barra');
 const btnIniciar = document.getElementById('btn-iniciar');
+const btnCambiarCamara = document.getElementById('btn-cambiar-camara');
 const btnGrabar = document.getElementById('btn-grabar');
 const btnDetener = document.getElementById('btn-detener');
 const btnLimpiar = document.getElementById('btn-limpiar');
@@ -391,6 +407,8 @@ let videoSubido = false;
 let countdownTimer = null;
 let tiempoTimer = null;
 let segundos = 0;
+let facingMode = 'user';
+let numCamaras = 0;
 
 function mostrarEstado(texto, tipo = '') {
   estadoEl.textContent = texto;
@@ -503,16 +521,60 @@ selectEl.addEventListener('change', () => {
 document.getElementById('usuario').addEventListener('input', actualizarPasos);
 consentimiento.addEventListener('change', actualizarBotonGrabar);
 
+async function activarStream(modo) {
+  const anterior = stream;
+  const nuevo = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { ideal: modo }, width: 640, height: 480 },
+    audio: true,
+  });
+  if (anterior) anterior.getTracks().forEach(t => t.stop());
+  stream = nuevo;
+  video.srcObject = stream;
+  video.classList.toggle('espejo', modo === 'user');
+}
+
+async function detectarNumCamaras() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    numCamaras = devices.filter(d => d.kind === 'videoinput').length;
+  } catch {
+    numCamaras = 0;
+  }
+}
+
 async function iniciarCamara() {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: true });
-    video.srcObject = stream;
+    await activarStream(facingMode);
+    await detectarNumCamaras();
     btnIniciar.classList.add('oculto');
+    if (numCamaras > 1) {
+      btnCambiarCamara.classList.remove('oculto');
+      btnCambiarCamara.disabled = false;
+    }
     actualizarBotonGrabar();
     mostrarEstado('Cámara lista. Presiona el botón rojo para grabar.', 'ok');
   } catch (e) {
     mostrarEstado('No se pudo acceder a la cámara: ' + e.message, 'error');
     toast('No se pudo acceder a la cámara', 'error');
+  }
+}
+
+async function cambiarCamara() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    toast('Detén la grabación antes de cambiar de cámara', 'error');
+    return;
+  }
+  const modoAnterior = facingMode;
+  facingMode = facingMode === 'user' ? 'environment' : 'user';
+  btnCambiarCamara.disabled = true;
+  try {
+    await activarStream(facingMode);
+    toast(facingMode === 'user' ? 'Cámara frontal activada' : 'Cámara trasera activada', 'info');
+  } catch (e) {
+    facingMode = modoAnterior;
+    toast('No se pudo cambiar de cámara', 'error');
+  } finally {
+    btnCambiarCamara.disabled = false;
   }
 }
 
@@ -678,6 +740,7 @@ function grabarOtro() {
 }
 
 btnIniciar.addEventListener('click', iniciarCamara);
+btnCambiarCamara.addEventListener('click', cambiarCamara);
 btnGrabar.addEventListener('click', iniciarCuentaAtras);
 btnDetener.addEventListener('click', detenerGrabacion);
 btnLimpiar.addEventListener('click', limpiar);
